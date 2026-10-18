@@ -4,6 +4,8 @@ import br.ufsm.csi.tcc.benchmark_app.model.Pedido;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 
 import java.util.List;
 import java.util.Optional;

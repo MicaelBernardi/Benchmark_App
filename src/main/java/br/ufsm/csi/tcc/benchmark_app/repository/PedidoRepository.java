@@ -1,5 +1,6 @@
 package br.ufsm.csi.tcc.benchmark_app.repository;
 
+import br.ufsm.csi.tcc.benchmark_app.dto.PedidoDetalhe;
 import br.ufsm.csi.tcc.benchmark_app.model.Pedido;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -62,7 +63,7 @@ public class PedidoRepository {
                         """)
                 .param("clienteId", pedido.getClienteId())
                 .param("valorTotal", pedido.getValorTotal())
-                .update(keyHolder, "id"); // A captura do ID gerado ocorre aqui
+                .update(keyHolder, "id");
 
         return keyHolder.getKeyAs(Integer.class);
     }
@@ -92,5 +93,28 @@ public class PedidoRepository {
                         """)
                 .param("id", id)
                 .update();
+    }
+
+    public List<PedidoDetalhe> buscarDetalhe(Integer id) {
+
+        return jdbcClient.sql("""
+                        SELECT p.id          AS pedidoId,
+                               p.cliente_id  AS clienteId,
+                               p.data,
+                               p.status,
+                               p.valor_total AS valorTotal,
+                               pr.id         AS produtoId,
+                               pr.nome       AS produtoNome,
+                               ip.quantidade,
+                               ip.valor_unidade AS valorUnidade
+                        FROM pedido p
+                        JOIN item_pedido ip ON ip.pedido_id = p.id
+                        JOIN produto pr     ON pr.id = ip.produto_id
+                        WHERE p.id = :id
+                        ORDER BY pr.id
+                        """)
+                .param("id", id)
+                .query(PedidoDetalhe.class)
+                .list();
     }
 }

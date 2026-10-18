@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,5 +89,19 @@ public class ProdutoRepository {
                         """)
                 .param("id", id)
                 .update();
+    }
+
+    public Optional<BigDecimal> baixarEstoque(Integer produtoId, Integer quantidade) {
+
+        return jdbcClient.sql("""
+                        UPDATE produto
+                        SET qtd_estoque = qtd_estoque - :quantidade
+                        WHERE id = :id
+                        RETURNING preco
+                        """)
+                .param("id", produtoId)
+                .param("quantidade", quantidade)
+                .query(BigDecimal.class)
+                .optional();
     }
 }

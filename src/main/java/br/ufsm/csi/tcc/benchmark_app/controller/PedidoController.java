@@ -1,6 +1,8 @@
 package br.ufsm.csi.tcc.benchmark_app.controller;
 
 
+import br.ufsm.csi.tcc.benchmark_app.dto.PedidoDetalhe;
+import br.ufsm.csi.tcc.benchmark_app.dto.PedidoRequest;
 import br.ufsm.csi.tcc.benchmark_app.model.ItemPedido;
 import br.ufsm.csi.tcc.benchmark_app.model.Pedido;
 import br.ufsm.csi.tcc.benchmark_app.service.PedidoService;
@@ -95,5 +97,26 @@ public class PedidoController {
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    // ---- Endpoints usados nos benchmarks ----
+
+    // Escrita: Pedido + Item_Pedido + UPDATE de estoque
+    @PostMapping("/completo")
+    public ResponseEntity<Pedido> inserirCompleto(@RequestBody PedidoRequest request) {
+        return ResponseEntity.ok(pedidoService.criarCompleto(request));
+    }
+
+    // Leitura: join Pedido + Item_Pedido + Produto
+    @GetMapping("/{id}/detalhes")
+    public ResponseEntity<List<PedidoDetalhe>> detalhes(@PathVariable Integer id) {
+
+        List<PedidoDetalhe> detalhes = pedidoService.buscarDetalhe(id);
+
+        if (detalhes.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(detalhes);
     }
 }

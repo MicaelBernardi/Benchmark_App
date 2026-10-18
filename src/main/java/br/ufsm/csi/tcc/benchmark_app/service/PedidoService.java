@@ -1,14 +1,19 @@
 package br.ufsm.csi.tcc.benchmark_app.service;
 
 
+import br.ufsm.csi.tcc.benchmark_app.dto.PedidoDetalhe;
+import br.ufsm.csi.tcc.benchmark_app.dto.PedidoRequest;
 import br.ufsm.csi.tcc.benchmark_app.model.ItemPedido;
 import br.ufsm.csi.tcc.benchmark_app.model.Pedido;
 import br.ufsm.csi.tcc.benchmark_app.repository.ItemPedidoRepository;
 import br.ufsm.csi.tcc.benchmark_app.repository.PedidoRepository;
+import br.ufsm.csi.tcc.benchmark_app.repository.ProdutoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +23,7 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final ItemPedidoRepository itemPedidoRepository;
+    private final ProdutoRepository produtoRepository;
 
     public List<Pedido> listar() {
         return pedidoRepository.listar();
@@ -31,10 +37,10 @@ public class PedidoService {
         return itemPedidoRepository.listarPorPedido(pedidoId);
     }
 
-public Pedido inserir(Pedido pedido) {
+    public Pedido inserir(Pedido pedido) {
         Integer idGerado = pedidoRepository.inserir(pedido);
         pedido.setId(idGerado);
-        
+
         return pedido;
     }
 
@@ -83,5 +89,46 @@ public Pedido inserir(Pedido pedido) {
 
     public boolean excluirItem(Integer pedidoId, Integer produtoId) {
         return itemPedidoRepository.excluir(pedidoId, produtoId) > 0;
+    }
+
+    @Transactional
+    public Pedido criarCompleto(PedidoRequest req) {
+
+        List<PedidoRequest.ItemRequest> itens = req.itens().stream()
+                .sorted(Comparator.comparing(PedidoRequest.ItemRequest::produtoId))
+                .toList();
+
+        BigDecimal total = BigDecimal.ZERO;
+        List<ItemPedido> itensPedido = new java.util.ArrayList<>();
+
+        for (PedidoRequest.ItemRequest it : itens) {
+            BigDecimal preco = produtoRepository.baixarEstoque(it.produtoId(), it.quantidade())
+                    .orElseThrow(() -> new IllegalStateException(
+                            "Produto inexistente: " + it.produtoId()));
+
+            total = total.add(preco.multiply(BigDecimal.valueOf(it.quantidade())));
+            itensPedido.add(ItemPedido.builder()
+                    .produtoId(it.produtoId())
+                    .quantidade(it.quantidade())
+                    .valorUnidade(preco)
+                    .build());
+        }
+
+        Pedido pedido = Pedido.builder()
+                .clienteId(req.clienteId())
+                .valorTotal(total)
+                .build();
+        pedido.setId(pedidoRepository.inserir(pedido));
+
+        for (ItemPedido item : itensPedido) {
+            item.setPedidoId(pedido.getId());
+            itemPedidoRepository.inserir(item);
+        }
+
+        return pedido;
+    }
+
+    public List<PedidoDetalhe> buscarDetalhe(Integer id) {
+        return pedidoRepository.buscarDetalhe(id);
     }
 }

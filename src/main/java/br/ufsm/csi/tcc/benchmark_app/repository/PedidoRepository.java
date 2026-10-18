@@ -50,20 +50,14 @@ public class PedidoRepository {
         return jdbcClient.sql("""
                         INSERT INTO pedido (
                             cliente_id,
-                            data,
-                            status,
                             valor_total
                         )
                         VALUES (
                             :clienteId,
-                            :data,
-                            :status,
                             :valorTotal
                         )
                         """)
                 .param("clienteId", pedido.getClienteId())
-                .param("data", pedido.getData())
-                .param("status", pedido.getStatus())
                 .param("valorTotal", pedido.getValorTotal())
                 .update();
     }

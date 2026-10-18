@@ -31,8 +31,10 @@ public class PedidoService {
         return itemPedidoRepository.listarPorPedido(pedidoId);
     }
 
-    public Pedido inserir(Pedido pedido) {
-        pedidoRepository.inserir(pedido);
+public Pedido inserir(Pedido pedido) {
+        Integer idGerado = pedidoRepository.inserir(pedido);
+        pedido.setId(idGerado);
+        
         return pedido;
     }
 

@@ -45,9 +45,10 @@ public class PedidoRepository {
                 .optional();
     }
 
-    public int inserir(Pedido pedido) {
+    public Integer inserir(Pedido pedido) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        return jdbcClient.sql("""
+        jdbcClient.sql("""
                         INSERT INTO pedido (
                             cliente_id,
                             valor_total
@@ -59,9 +60,10 @@ public class PedidoRepository {
                         """)
                 .param("clienteId", pedido.getClienteId())
                 .param("valorTotal", pedido.getValorTotal())
-                .update();
-    }
+                .update(keyHolder, "id"); // A captura do ID gerado ocorre aqui
 
+        return keyHolder.getKeyAs(Integer.class);
+    }
     public int atualizar(Pedido pedido) {
 
         return jdbcClient.sql("""
